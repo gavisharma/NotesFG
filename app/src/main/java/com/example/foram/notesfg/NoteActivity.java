@@ -27,7 +27,7 @@ public class NoteActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.save_note,menu);
+        getMenuInflater().inflate(R.menu.save_note, menu);
         return true;
     }
 
@@ -43,12 +43,12 @@ public class NoteActivity extends AppCompatActivity {
             cv.put("LONGITUDE", note.longitude);
 
             sqLiteDatabase = dbHelper.getWritableDatabase();
-            sqLiteDatabase.insert("NOTE", null,cv);
+            sqLiteDatabase.insert("NOTE", null, cv);
 
             Log.v("Note Creation","Note Saved");
 
         }catch(Exception e){
-            Log.e("Note Creation",e.getMessage());
+            Log.e("Note Creation", e.getMessage());
         }finally {
             sqLiteDatabase.close();
         }

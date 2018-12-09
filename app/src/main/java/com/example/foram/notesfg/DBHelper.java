@@ -20,7 +20,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String LATITUDE  = "LATITUDE";
     public static final String LONGITUDE = "LONGITUDE";
 
-
     public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, DATABASE_NAME, null, 1);
     }
