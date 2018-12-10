@@ -2,6 +2,7 @@ package com.example.foram.notesfg;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -18,6 +19,9 @@ import android.view.MenuItem;
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    DBHelper dbHelper;
+    SQLiteDatabase sqLiteDatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,8 +35,8 @@ public class HomeActivity extends AppCompatActivity
             public void onClick(View view) {
 //                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                        .setAction("Action", null).show();
-                Intent homeActivity = new Intent(getApplicationContext(), NoteActivity.class);
-                startActivity(homeActivity);
+                Intent subjectActivity = new Intent(getApplicationContext(), SubjectActivity.class);
+                startActivity(subjectActivity);
             }
         });
 
@@ -44,6 +48,11 @@ public class HomeActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        dbHelper = new DBHelper(this);
+        sqLiteDatabase = dbHelper.getWritableDatabase();
+//        sqLiteDatabase.beginTransaction();
+        sqLiteDatabase.close();
     }
 
     @Override
