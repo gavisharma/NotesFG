@@ -20,8 +20,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String LATITUDE  = "LATITUDE";
     public static final String LONGITUDE = "LONGITUDE";
 
-
-    public DBHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
+    public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
     }
 
@@ -36,6 +35,21 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.v("DBHelper", SUBJECT_TABLE );
 
             db.execSQL(SUBJECT_TABLE);
+
+        } catch (Exception e) {
+
+            Log.e("DBHelper", e.getMessage());
+        }
+
+
+        //"Subject" table is populated-----------------------------------------------------------------------------------------------------
+
+        try{
+            String SUBJECT_TABLE_DATA = "INSERT INTO " + SUBJECT + " VALUES(1, 'C'), (2, 'C++'), (3, 'JAVA'), (4, 'SWIFT'), (5, 'PHP'), (6, 'JavaScript'), (7, 'ObjectiveC'), (8, 'ORACLE'), (9, 'Python'), (10, 'CSS')";
+
+            Log.v("DBHelper", SUBJECT_TABLE_DATA );
+
+            db.execSQL(SUBJECT_TABLE_DATA);
 
         } catch (Exception e) {
 

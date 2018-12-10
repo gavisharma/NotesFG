@@ -8,18 +8,19 @@ import java.util.TimeZone;
 
 public class Note {
 
-    public long dateTime, id, longitude, latitude, subID;
+    public long dateTime, id, subID;
+    public float longitude, latitude;
     public String title, content, image;
 
-    public Note(Note note){
-        this.id         = note.id;
-        this.image      = note.image;
-        this.subID      = note.subID;
-        this.title      = note.title;
-        this.content    = note.content;
-        this.dateTime   = note.dateTime;
-        this.latitude   = note.latitude;
-        this.longitude  = note.longitude;
+    public Note(){
+        this.id         = 1;
+        this.image      = "";
+        this.subID      = 1;
+        this.title      = "";
+        this.content    = "";
+        this.dateTime   = 111111;
+        this.latitude   = 11.988989f;
+        this.longitude  = 78.283792f;
     }
 
     public long getDateTime() {
