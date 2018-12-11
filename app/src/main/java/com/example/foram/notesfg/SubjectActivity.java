@@ -61,7 +61,7 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
 //                Toast.makeText(this, userData,Toast.LENGTH_LONG).show();
             }
         }catch(Exception e){
-            Log.e("RegisterActivity",e.getMessage());
+            Log.e("SubjectActivity",e.getMessage());
         }finally {
             sqLiteDatabase.close();
         }
@@ -82,25 +82,25 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
         });
     }
 
-    @Override
-    public void onBackPressed(){
-        if (viewType == "menu") {
-            finish();
-//        } else if (viewType == "cart") {
-//            viewType = "menu";
-//            cartButton.setText("Show Cart");
-//            setUpGridFor(items, viewType);
-//        } else if (viewType == "payment") {
-//            viewType = "cart";
-//            cartButton.setText("Show Receipt");
-//            setUpGridFor(selectedItems, viewType);
-//        } else if (viewType == "receipt") {
+//    @Override
+//    public void onBackPressed(){
+////        if (viewType == "menu") {
+////            finish();
+////        } else if (viewType == "cart") {
+////            viewType = "menu";
+////            cartButton.setText("Show Cart");
+////            setUpGridFor(items, viewType);
+////        } else if (viewType == "payment") {
 ////            viewType = "cart";
-////            cartButton.setText("Make Payment");
+////            cartButton.setText("Show Receipt");
 ////            setUpGridFor(selectedItems, viewType);
-//            finish();
-        }
-    }
+////        } else if (viewType == "receipt") {
+//////            viewType = "cart";
+//////            cartButton.setText("Make Payment");
+//////            setUpGridFor(selectedItems, viewType);
+////            finish();
+////        }
+//    }
 
     @Override
     public void onResume(){

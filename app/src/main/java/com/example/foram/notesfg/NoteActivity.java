@@ -17,11 +17,16 @@ import java.util.ArrayList;
 
 public class NoteActivity extends AppCompatActivity {
 
+
+
     EditText note_title;
     TextView content_text;
     DBHelper dbHelper;
     SQLiteDatabase sqLiteDatabase;
     int subjectID, maxNoteID;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,31 +40,12 @@ public class NoteActivity extends AppCompatActivity {
         Log.v("MAx Note ID: ", String.valueOf(maxNoteID));
     }
 
-    public int getMaxNoteID(){
-        try{
-            sqLiteDatabase = dbHelper.getReadableDatabase();
-            String columns[] = {"ID"};
 
-            Cursor cursor = sqLiteDatabase.query("NOTES",columns,
-                    "MAX",null,null, null, null);
-
-            while (cursor.moveToNext()){
-                maxNoteID = cursor.getInt(cursor.getColumnIndex("ID")) + 1;
-//                Toast.makeText(this, userData,Toast.LENGTH_LONG).show();
-            }
-
-        }catch(Exception e){
-            Log.e("RegisterActivity",e.getMessage());
-        }finally {
-            sqLiteDatabase.close();
-        }
-        return maxNoteID;
-
-    }
 
     private int getMaxID(){
         int mx=-1;
         try{
+
             sqLiteDatabase = dbHelper.getReadableDatabase();
 
             Cursor cursor = sqLiteDatabase.rawQuery("SELECT MAX(ID) FROM NOTES", null);
@@ -134,4 +120,7 @@ public class NoteActivity extends AppCompatActivity {
             sqLiteDatabase.close();
         }
     }
+
+
+
 }

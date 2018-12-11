@@ -1,11 +1,11 @@
 package com.example.foram.notesfg;
 
-import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -15,12 +15,20 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.Toast;
 
-public class HomeActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+import java.util.ArrayList;
+
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     DBHelper dbHelper;
     SQLiteDatabase sqLiteDatabase;
+    GridView notesGrid;
+    String viewNote;
+    ArrayList<Note> noteArray = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,13 +36,14 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        notesGrid = findViewById(R.id.notesGrid);
+        notesGrid.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
+        viewNote = "select";
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
                 Intent subjectActivity = new Intent(getApplicationContext(), SubjectActivity.class);
                 startActivity(subjectActivity);
             }
@@ -53,6 +62,50 @@ public class HomeActivity extends AppCompatActivity
         sqLiteDatabase = dbHelper.getWritableDatabase();
 //        sqLiteDatabase.beginTransaction();
         sqLiteDatabase.close();
+    }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        noteArray.clear();
+        noteArray = getNotes();
+        notesDisplayGrid(noteArray,viewNote);
+    }
+
+    public ArrayList<Note> getNotes() {
+        dbHelper = new DBHelper((this));
+        try{
+            sqLiteDatabase = dbHelper.getReadableDatabase();
+            String noteColumns[] = {"ID", "CONTENT", "DATETIME", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"};
+            Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,null);
+            while (cursor.moveToNext()){
+                Note notes = new Note();
+                notes.setTitle(cursor.getString(cursor.getColumnIndex("TITLE")));
+                notes.setContent(cursor.getString(cursor.getColumnIndex("CONTENT")));
+                notes.setDateTime(cursor.getLong(cursor.getColumnIndex("DATETIME")));
+                noteArray.add(notes);
+            }
+        }catch(Exception e){
+            Log.e("HomeActivity",e.getMessage());
+        } finally {
+            sqLiteDatabase.close();
+        }
+        return noteArray;
+    }
+
+    private void notesDisplayGrid(ArrayList<Note> list, final String viewNote){
+        final NoteGridAdaptor noteGridAdaptor = new NoteGridAdaptor(getApplicationContext(), viewNote, list);
+        notesGrid.setAdapter(noteGridAdaptor);
+        notesGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Note note = noteArray.get(position);
+                Intent noteActivity = new Intent(getApplicationContext(), NoteActivity.class);
+                noteActivity.putExtra("Note_ID",note.id);
+                startActivity(noteActivity);
+            }
+        });
+
     }
 
     @Override
