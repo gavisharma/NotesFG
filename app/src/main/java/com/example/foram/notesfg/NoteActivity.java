@@ -1,60 +1,83 @@
 package com.example.foram.notesfg;
 
+import android.app.Dialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import java.util.ArrayList;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApi;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 
-public class NoteActivity extends AppCompatActivity {
+public class NoteActivity extends AppCompatActivity implements View.OnClickListener{
 
     EditText note_title;
-    TextView content_text;
+    TextView note_content;
+    Button imageButton, audioButton, mapButton;
     DBHelper dbHelper;
     SQLiteDatabase sqLiteDatabase;
     int subjectID, maxNoteID;
+
+    private static final String TAG = "NoteActivity";
+
+    private static final int ERROR_DIALOG_REQUEST = 9001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note);
+        if (isServicesOK()){
+            init();
+        }
         note_title = findViewById(R.id.note_title);
-        content_text = findViewById(R.id.note_content);
+        note_content = findViewById(R.id.note_content);
+        imageButton = findViewById(R.id.imageButton);
+        audioButton = findViewById(R.id.audioButton);
+        mapButton = findViewById(R.id.mapButton);
+        imageButton.setOnClickListener(this);
+        audioButton.setOnClickListener(this);
+        mapButton.setOnClickListener(this);
         subjectID = getIntent().getIntExtra("SubjectID", 1);
         dbHelper = new DBHelper(this);
         maxNoteID = getMaxID();
-        Log.v("MAx Note ID: ", String.valueOf(maxNoteID));
+        Log.v("Max Note ID: ", String.valueOf(maxNoteID));
+        if (isServicesOK()){
+            init();
+        }
     }
 
-    public int getMaxNoteID(){
-        try{
-            sqLiteDatabase = dbHelper.getReadableDatabase();
-            String columns[] = {"ID"};
+    private void init(){}{
 
-            Cursor cursor = sqLiteDatabase.query("NOTES",columns,
-                    "MAX",null,null, null, null);
+    }
 
-            while (cursor.moveToNext()){
-                maxNoteID = cursor.getInt(cursor.getColumnIndex("ID")) + 1;
-//                Toast.makeText(this, userData,Toast.LENGTH_LONG).show();
-            }
-
-        }catch(Exception e){
-            Log.e("RegisterActivity",e.getMessage());
-        }finally {
-            sqLiteDatabase.close();
+    public boolean isServicesOK(){
+        int available = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(NoteActivity.this);
+        if (available == ConnectionResult.SUCCESS){
+            return true;
+        } else if(GoogleApiAvailability.getInstance().isUserResolvableError(available)){
+            Dialog dialog = GoogleApiAvailability.getInstance().getErrorDialog(this, available, ERROR_DIALOG_REQUEST);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "You can't make map requests", Toast.LENGTH_SHORT).show();
         }
-        return maxNoteID;
-
+        return false;
     }
 
     private int getMaxID(){
@@ -87,34 +110,20 @@ public class NoteActivity extends AppCompatActivity {
                 Note note = new Note();
                 note.id = maxNoteID;
                 note.title = String.valueOf(note_title.getText());
-                note.content = String.valueOf(content_text.getText());
+                note.content = String.valueOf(note_content.getText());
                 saveNote(note);
-//                Intent homeActivity = new Intent(this, HomeActivity.class);
-//                startActivity(homeActivity);
+                Intent homeActivity = new Intent(this, HomeActivity.class);
+                startActivity(homeActivity);
 
                 break;
         }
         return true;
     }
 
-//    public void insertNote(Note note){
-//        try{
-//            String SUBJECT_TABLE_DATA = "INSERT INTO NOTES VALUES(1, 'C'), (2, 'C++'), (3, 'JAVA'), (4, 'SWIFT'), (5, 'PHP'), (6, 'JavaScript'), (7, 'ObjectiveC'), (8, 'ORACLE'), (9, 'Python'), (10, 'CSS')";
-//
-//            Log.v("DBHelper", SUBJECT_TABLE_DATA );
-//
-//            db.execSQL(SUBJECT_TABLE_DATA);
-//
-//        } catch (Exception e) {
-//
-//            Log.e("DBHelper", e.getMessage());
-//        }
-//    }
-
     public void saveNote(Note note){
         try{
             ContentValues cv = new ContentValues();
-            cv.put("ID",note.id);
+            cv.put("ID", note.id);
             cv.put("TITLE", note.title);
             cv.put("IMAGE", note.image);
             cv.put("SUB_ID", note.subID);
@@ -134,4 +143,25 @@ public class NoteActivity extends AppCompatActivity {
             sqLiteDatabase.close();
         }
     }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.mapButton:{
+                //Map Stuff
+                Intent mapIntent = new Intent(NoteActivity.this, MapActivity.class);
+                startActivity(mapIntent);
+            } break;
+            case R.id.audioButton:{
+                //Audio Stuff
+            } break;
+            case R.id.imageButton:{
+                //Image Stuff
+            } break;
+            default:{
+                //Do nothing
+            }
+        }
+    }
+
 }

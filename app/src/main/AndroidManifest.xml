@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.foram.notesfg">
 
+    <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"></uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,6 +14,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDC8pJeO6bIRfZ2PPH-5YyR_07CsHwCsy4"/>
+
         <activity android:name=".MainActivity"></activity>
         <activity android:name=".NoteActivity" />
         <activity
@@ -17,11 +27,14 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".SubjectActivity"></activity>
+        <activity android:name=".MapActivity"></activity>
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+
     </application>
 
 </manifest>
