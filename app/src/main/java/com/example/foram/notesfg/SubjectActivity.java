@@ -58,7 +58,6 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
                 sub.setS_name(cursor.getString(cursor.getColumnIndex("NAME")));
                 sub.setS_id(cursor.getInt(cursor.getColumnIndex("ID")));
                 subjects.add(sub);
-//                Toast.makeText(this, userData,Toast.LENGTH_LONG).show();
             }
         }catch(Exception e){
             Log.e("SubjectActivity",e.getMessage());
@@ -77,67 +76,16 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
                 Subject sub = subjects.get(position);
                 Intent noteActivity = new Intent(getApplicationContext(), NoteActivity.class);
                 noteActivity.putExtra("SubjectId:", sub.s_id);
+                noteActivity.putExtra("ViewType", "createNote");
                 startActivity(noteActivity);
             }
         });
     }
 
-//    @Override
-//    public void onBackPressed(){
-////        if (viewType == "menu") {
-////            finish();
-////        } else if (viewType == "cart") {
-////            viewType = "menu";
-////            cartButton.setText("Show Cart");
-////            setUpGridFor(items, viewType);
-////        } else if (viewType == "payment") {
-////            viewType = "cart";
-////            cartButton.setText("Show Receipt");
-////            setUpGridFor(selectedItems, viewType);
-////        } else if (viewType == "receipt") {
-//////            viewType = "cart";
-//////            cartButton.setText("Make Payment");
-//////            setUpGridFor(selectedItems, viewType);
-////            finish();
-////        }
-//    }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        SharedPreferences preferences = this.getSharedPreferences("com.example.gavi.myapplication", Context.MODE_PRIVATE);
-        Boolean paymentDone = preferences.getBoolean("paymentDone", false);
-        if (paymentDone) {
-//            if (selectedItems.size() > 0){
-//                viewType = "receipt";
-//                cartButton.setText("Done");
-//                setUpGridFor(selectedItems, viewType);
-//            }
-        }
-    }
 
     @Override
     public void onClick(View view) {
-//        if (viewType == "menu") {
-//            viewType = "cart";
-////            cartButton.setText("Make Payment");
-//        }
-//        else if (viewType == "cart") {
-//            //Make Payment
-//            SharedPreferences prefs = this.getSharedPreferences("com.example.gavi.myapplication", Context.MODE_PRIVATE);
-//            SharedPreferences.Editor editor = prefs.edit();
-//            editor.putBoolean("paymentDone", false);
-//            editor.putString("cardNumber","");
-//            editor.commit();
-//            startActivity(new Intent(getApplicationContext(), PaymentActivity.class));
-//        } else if (viewType == "payment") {
-//            viewType = "receipt";
-//            cartButton.setText("Done");
-//        } else if (viewType == "receipt") {
-//            finish();
-//        }
-//        if (selectedItems.size() > 0){
-//            setUpGridFor(selectedItems, viewType);
-//        }
+
     }
 }

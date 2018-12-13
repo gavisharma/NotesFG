@@ -1,6 +1,7 @@
 package com.example.foram.notesfg;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -12,8 +13,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import static com.example.foram.notesfg.DBHelper.NOTE;
 
 public class NoteActivity extends AppCompatActivity {
 
@@ -23,9 +33,9 @@ public class NoteActivity extends AppCompatActivity {
     TextView content_text;
     DBHelper dbHelper;
     SQLiteDatabase sqLiteDatabase;
-    int subjectID, maxNoteID;
-
-
+    int subjectID, maxNoteID, displayNoteID;
+    String viewType;
+    Note selectedNote;
 
 
     @Override
@@ -35,17 +45,29 @@ public class NoteActivity extends AppCompatActivity {
         note_title = findViewById(R.id.note_title);
         content_text = findViewById(R.id.note_content);
         subjectID = getIntent().getIntExtra("SubjectID", 1);
+        displayNoteID = Integer.parseInt(getIntent().getStringExtra("Note_ID"));
+//        displayNoteID = getIntent().getIntExtra("Note_ID", 1);
+        viewType = getIntent().getStringExtra("ViewType");
         dbHelper = new DBHelper(this);
-        maxNoteID = getMaxID();
-        Log.v("MAx Note ID: ", String.valueOf(maxNoteID));
+
     }
 
-
+    @Override
+    public void onStart(){
+        super.onStart();
+        if (viewType.equalsIgnoreCase("displayNote")){
+            selectedNote = getNoteFromDatabaseForID(displayNoteID);
+            note_title.setText(String.valueOf(selectedNote.title));
+            content_text.setText(String.valueOf(selectedNote.content));
+        } else if (viewType.equalsIgnoreCase("createNote")){
+            maxNoteID = getMaxID();
+            Log.v("Max Note ID: ", String.valueOf(maxNoteID));
+        }
+    }
 
     private int getMaxID(){
         int mx=-1;
         try{
-
             sqLiteDatabase = dbHelper.getReadableDatabase();
 
             Cursor cursor = sqLiteDatabase.rawQuery("SELECT MAX(ID) FROM NOTES", null);
@@ -66,6 +88,8 @@ public class NoteActivity extends AppCompatActivity {
         return true;
     }
 
+    //SaveNote
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -83,36 +107,91 @@ public class NoteActivity extends AppCompatActivity {
         return true;
     }
 
-//    public void insertNote(Note note){
-//        try{
-//            String SUBJECT_TABLE_DATA = "INSERT INTO NOTES VALUES(1, 'C'), (2, 'C++'), (3, 'JAVA'), (4, 'SWIFT'), (5, 'PHP'), (6, 'JavaScript'), (7, 'ObjectiveC'), (8, 'ORACLE'), (9, 'Python'), (10, 'CSS')";
-//
-//            Log.v("DBHelper", SUBJECT_TABLE_DATA );
-//
-//            db.execSQL(SUBJECT_TABLE_DATA);
-//
-//        } catch (Exception e) {
-//
-//            Log.e("DBHelper", e.getMessage());
-//        }
-//    }
 
+
+
+    public Note getNoteFromDatabaseForID(int noteID){
+            try{
+                sqLiteDatabase = dbHelper.getReadableDatabase();
+                String columns[] = {"ID", "CONTENT", "TITLE"};
+                String userData[] = {String.valueOf(noteID)};
+                Note note = new Note();
+                Cursor cursor = sqLiteDatabase.query("NOTES", columns, "ID = ?", userData, null, null, null);
+//                Cursor cursor = sqLiteDatabase.query("NOTES", columns,"ID = ?", userData,null,null,null);
+                while (cursor.moveToNext()){
+                    note.id = noteID;
+                    note.title = cursor.getString(cursor.getColumnIndex("TITLE"));
+                    note.content = cursor.getString(cursor.getColumnIndex("CONTENT"));
+//                    note.longitude = cursor.getFloat(cursor.getColumnIndex("LONGITUDE"));
+//                    note.latitude = cursor.getFloat(cursor.getColumnIndex("LATITUDE"));
+//                    note.image = cursor.getString(cursor.getColumnIndex("IMAGE"));
+//                    note.creationDate = cursor.getString(cursor.getColumnIndex("CREATIONDATE"));
+                }
+//                "CREATIONDATE", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"
+
+//                if(cursor != null){
+//                    if (cursor.getCount() > 0){
+//                        note.id = noteID;
+//                        note.title = cursor.getString(cursor.getColumnIndex("TITLE"));
+//                        note.content = cursor.getString(cursor.getColumnIndex("CONTENT"));
+//                        return note;
+//                    }
+//                }
+                return note;
+
+
+            }catch(Exception e){
+                Log.e("LoginActivity", e.getMessage());
+                return null;
+            }finally {
+                sqLiteDatabase.close();
+            }
+    }
+
+
+    public  String dateTimeFormat(){
+        Calendar cal = Calendar.getInstance();
+        Date date = cal.getTime();
+        DateFormat dateFormat = new SimpleDateFormat("dd/MMM/yyyy hh:mm:ss a", Locale.CANADA);
+        String formattedDate = dateFormat.format(date);
+        return formattedDate;
+    }
+
+    //saveNote main loop
     public void saveNote(Note note){
+//        if (viewType.equalsIgnoreCase("displayNote")){
+//
+//            try{
+//
+//                String DELETE_NOTE = "DELETE FROM NOTES WHERE ID = ";
+//
+//            }catch (Exception e){
+//
+//            }
+//
+//
+//            note.id = displayNoteID;
+//        }
         try{
             ContentValues cv = new ContentValues();
-            cv.put("ID",note.id);
+            cv.put("ID", note.id);
             cv.put("TITLE", note.title);
             cv.put("IMAGE", note.image);
             cv.put("SUB_ID", note.subID);
             cv.put("CONTENT", note.content);
-            cv.put("DATETIME",note.dateTime);
+            cv.put("CREATIONDATE", dateTimeFormat());
             cv.put("LATITUDE", note.latitude);
             cv.put("LONGITUDE", note.longitude);
 
             sqLiteDatabase = dbHelper.getWritableDatabase();
-            sqLiteDatabase.insert("NOTES", null, cv);
-
-            Log.v("Note Creation","Note Saved");
+            if(viewType.equalsIgnoreCase("displayNote")){
+                String userData[] = {String.valueOf(displayNoteID)};
+                sqLiteDatabase.update("NOTES", cv, "ID = ?", userData);
+                Log.v("Note Update","Note updated");
+            } else{
+                sqLiteDatabase.insert("NOTES", null, cv);
+                Log.v("Note Creation","Note Saved");
+            }
 
         }catch(Exception e){
             Log.e("Note Creation", e.getMessage());

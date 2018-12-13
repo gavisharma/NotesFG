@@ -19,8 +19,14 @@
     <MultiAutoCompleteTextView
         android:id="@+id/note_content"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="202dp"
         android:gravity="top"
         android:hint="Content" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@android:drawable/alert_dark_frame" />
 
 </LinearLayout>

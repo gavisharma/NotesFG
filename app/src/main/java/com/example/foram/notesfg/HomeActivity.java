@@ -76,13 +76,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         dbHelper = new DBHelper((this));
         try{
             sqLiteDatabase = dbHelper.getReadableDatabase();
-            String noteColumns[] = {"ID", "CONTENT", "DATETIME", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"};
+            String noteColumns[] = {"ID", "CONTENT", "CREATIONDATE", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"};
             Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,null);
             while (cursor.moveToNext()){
                 Note notes = new Note();
+                notes.id = cursor.getInt(cursor.getColumnIndex("ID"));
                 notes.setTitle(cursor.getString(cursor.getColumnIndex("TITLE")));
                 notes.setContent(cursor.getString(cursor.getColumnIndex("CONTENT")));
-                notes.setDateTime(cursor.getLong(cursor.getColumnIndex("DATETIME")));
+                notes.setDateTime(cursor.getString(cursor.getColumnIndex("CREATIONDATE")));
                 noteArray.add(notes);
             }
         }catch(Exception e){
@@ -101,7 +102,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Note note = noteArray.get(position);
                 Intent noteActivity = new Intent(getApplicationContext(), NoteActivity.class);
-                noteActivity.putExtra("Note_ID",note.id);
+                noteActivity.putExtra("ViewType", "displayNote");
+                noteActivity.putExtra("Note_ID", String.valueOf(note.id));
+//                noteActivity.putExtra("Note_ID", 0 + note.id);
                 startActivity(noteActivity);
             }
         });
