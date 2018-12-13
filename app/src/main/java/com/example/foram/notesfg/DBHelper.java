@@ -2,15 +2,22 @@ package com.example.foram.notesfg;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
 
 public class DBHelper extends SQLiteOpenHelper {
 
     final static String DATABASE_NAME = "fg_Notes";
     final static String SUBJECT = "Subjects";
     final static String NOTE = "Notes";
+    //C
 
     public static final String ID        = "ID";
     public static final String TITLE     = "TITLE";
@@ -61,7 +68,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         try{
 
-            String NOTE_TABLE = "CREATE TABLE " + NOTE + " (ID NUMBER(10) PRIMARY KEY, CONTENT VARCHAR(2000), DATETIME NUMBER(40), TITLE VARCHAR(100), LATITUDE NUMBER(10), LONGITUDE NUMBER(10), IMAGE VARCHAR(20), SUB_ID NUMBER(10))";
+            String NOTE_TABLE = "CREATE TABLE " + NOTE + " (ID NUMBER(10) PRIMARY KEY, CONTENT VARCHAR(2000), CREATIONDATE VARCHAR(40), TITLE VARCHAR(100), LATITUDE NUMBER(10), LONGITUDE NUMBER(10), IMAGE BLOB(200), SUB_ID NUMBER(10))";
 
             Log.v("DBHelper", NOTE_TABLE);
 
@@ -73,8 +80,61 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.e("DBHelper", e.getMessage());
         }
 
-
     }
+
+    public long insertImage(Bitmap bitmap){
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100,out);
+        byte[] buffer = out.toByteArray();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.beginTransaction();
+        ContentValues values;
+
+        long id = 0;
+
+        try{
+            values = new ContentValues();
+            values.put("img", buffer);
+
+            id = db.insert(NOTE, null, values);
+            db.setTransactionSuccessful();
+            Log.i("Image..", "Inserted..");
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+        return id;
+    }
+
+    public Bitmap getBitmap(int id){
+        Bitmap bitmap = null;
+        SQLiteDatabase db = getReadableDatabase();
+        db.beginTransaction();
+        try{
+            String selectQuery = "SELECT * FROM " + NOTE + " WHERE id = " + id;
+            Cursor cursor = db.rawQuery(selectQuery, null);
+
+            if (cursor.getCount() > 0) {
+                while (cursor.moveToNext()) {
+                    byte[] blob = cursor.getBlob(cursor.getColumnIndex(IMAGE));
+                    bitmap = BitmapFactory.decodeByteArray(blob, 0, blob.length);
+
+                }
+                }
+            db.setTransactionSuccessful();
+            }catch (Exception e){
+
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+        return bitmap;
+    }
+
+
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -91,11 +151,4 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public void insertNote(String note) {
-
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-//        values.put();
-    }
 }

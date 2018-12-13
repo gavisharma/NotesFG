@@ -52,17 +52,17 @@ public class SubjectGridAdapter extends BaseAdapter implements View.OnClickListe
         TextView subjectName = view.findViewById(R.id.subjectName);
         selectedImage.setVisibility(View.VISIBLE);
         subjectName.setText("          "+sub.getS_name());
-        if (viewType == "select") {
-            if (selectedSubject != null){
-                if (selectedSubject.equals(sub)) {
-                    selectedImage.setImageResource(R.drawable.ic_selected);
-                } else{
-                    selectedImage.setImageResource(0);
-                }
-            }  else{
-                selectedImage.setImageResource(0);
-            }
-        }
+//        if (viewType == "select") {
+//            if (selectedSubject != null){
+//                if (selectedSubject.equals(sub)) {
+//                    selectedImage.setImageResource(R.drawable.ic_selected);
+//                } else{
+//                    selectedImage.setImageResource(0);
+//                }
+//            }  else{
+//                selectedImage.setImageResource(0);
+//            }
+//        }
         return view;
     }
 
