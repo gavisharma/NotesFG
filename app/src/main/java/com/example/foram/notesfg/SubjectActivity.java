@@ -75,14 +75,12 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Subject sub = subjects.get(position);
                 Intent noteActivity = new Intent(getApplicationContext(), NoteActivity.class);
-                noteActivity.putExtra("SubjectId:", sub.s_id);
+                noteActivity.putExtra("SubjectID", String.valueOf(sub.s_id));
                 noteActivity.putExtra("ViewType", "createNote");
                 startActivity(noteActivity);
             }
         });
     }
-
-
 
     @Override
     public void onClick(View view) {
