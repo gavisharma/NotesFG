@@ -1,6 +1,9 @@
 package com.example.foram.notesfg;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +21,7 @@ public class NoteGridAdaptor extends BaseAdapter {
     LayoutInflater inflater;
     ArrayList notes;
     String viewNote;
+    private static String ROOT_DIR = Environment.getExternalStorageDirectory().toString() + "/saveImages";
 
     NoteGridAdaptor(Context context, String viewNote, ArrayList notes) {
         inflater = (LayoutInflater.from(context));
@@ -46,10 +50,19 @@ public class NoteGridAdaptor extends BaseAdapter {
         TextView titleNote = convertView.findViewById(R.id.name);
         TextView contentNote = convertView.findViewById(R.id.content);
         TextView dateNote = convertView.findViewById(R.id.date);
-
+        ImageView imageView = convertView.findViewById(R.id.imageView);
+        Log.v("NoteImageName", note.image);
+        imageView.setImageBitmap(getBitmapImage(note.image));
         titleNote.setText(""+note.getTitle());
         contentNote.setText(""+note.getContent());
         dateNote.setText(""+note.getDateTime());
         return convertView;
+    }
+
+    public Bitmap getBitmapImage(String imageName){
+        Bitmap bmp = BitmapFactory.decodeFile(ROOT_DIR + "/" + imageName);
+        Log.v("NoteImagePath", ROOT_DIR + "/" + imageName);
+        Log.v("NoteImageName", imageName);
+        return bmp;
     }
 }

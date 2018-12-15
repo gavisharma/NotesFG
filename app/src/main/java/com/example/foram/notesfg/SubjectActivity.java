@@ -25,7 +25,6 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
     SQLiteDatabase sqLiteDatabase;
 
     GridView subjectGrid;
-    private Button proceedButton;
     String viewType;
     Subject selectedSubject;
 
@@ -37,8 +36,6 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
         setContentView(R.layout.activity_subject);
         subjectGrid = findViewById(R.id.subjectGrid);
         subjectGrid.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
-        proceedButton = findViewById(R.id.proceedButton);
-        proceedButton.setOnClickListener(this);
         viewType = "select";
         selectedSubject = null;
         subjects = populateData();
@@ -77,6 +74,7 @@ public class SubjectActivity extends AppCompatActivity implements View.OnClickLi
                 Intent noteActivity = new Intent(getApplicationContext(), NoteActivity.class);
                 noteActivity.putExtra("SubjectID", String.valueOf(sub.s_id));
                 noteActivity.putExtra("ViewType", "createNote");
+                finish();
                 startActivity(noteActivity);
             }
         });

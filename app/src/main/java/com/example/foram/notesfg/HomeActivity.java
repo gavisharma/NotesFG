@@ -77,13 +77,14 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try{
             sqLiteDatabase = dbHelper.getReadableDatabase();
             String noteColumns[] = {"ID", "CONTENT", "CREATIONDATE", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"};
-            Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,null);
+            Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,"TITLE ASC");
             while (cursor.moveToNext()){
                 Note notes = new Note();
                 notes.id = cursor.getInt(cursor.getColumnIndex("ID"));
                 notes.setTitle(cursor.getString(cursor.getColumnIndex("TITLE")));
                 notes.setContent(cursor.getString(cursor.getColumnIndex("CONTENT")));
                 notes.setDateTime(cursor.getString(cursor.getColumnIndex("CREATIONDATE")));
+                notes.setImage(cursor.getString(cursor.getColumnIndex("IMAGE")));
                 noteArray.add(notes);
             }
         }catch(Exception e){
@@ -150,7 +151,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.sort_by_subject) {
-            // Handle the camera action
+
         } else if (id == R.id.sort_by_date) {
 
         } else if (id == R.id.sort_by_title) {

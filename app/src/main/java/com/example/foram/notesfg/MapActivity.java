@@ -60,7 +60,11 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     public void onComplete(@NonNull Task task) {
                         if (task.isSuccessful()){
                             Location currentLocation = (Location) task.getResult();
-                            moveCameraAndDropPin(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()));
+                            if (currentLocation ==  null){
+                                moveCameraAndDropPin(new LatLng(43.7733, -79.3359));
+                            } else {
+                                moveCameraAndDropPin(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()));
+                            }
                         } else {
                             Toast.makeText(MapActivity.this, "Your location can't be found", Toast.LENGTH_SHORT).show();
                         }

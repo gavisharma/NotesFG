@@ -48,9 +48,7 @@ public class SubjectGridAdapter extends BaseAdapter implements View.OnClickListe
 
         Subject sub = (Subject)subjects.get(i);
         Log.v("Subject Details", String.valueOf(i) + " " + sub.getS_name());
-        ImageView selectedImage = view.findViewById(R.id.subjectSelected);
         TextView subjectName = view.findViewById(R.id.subjectName);
-        selectedImage.setVisibility(View.VISIBLE);
         subjectName.setText("          "+sub.getS_name());
 //        if (viewType == "select") {
 //            if (selectedSubject != null){

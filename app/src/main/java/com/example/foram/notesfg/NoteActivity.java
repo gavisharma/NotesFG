@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.sax.RootElement;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -59,6 +60,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     int subjectID, maxNoteID, displayNoteID;
     String viewType;
     Note selectedNote;
+    private static String ROOT_DIR = Environment.getExternalStorageDirectory().toString() + "/saveImages";
     public static final int REQUEST_PERM_WRITE_STORAGE = 102;
     private final int CAPTURE_COOLER_PHOTO = 104;
 
@@ -91,70 +93,13 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             selectedNote = getNoteFromDatabaseForID(displayNoteID);
             note_title.setText(String.valueOf(selectedNote.title));
             note_content.setText(String.valueOf(selectedNote.content));
+            imageView.setImageBitmap(getBitmapImage(selectedNote.image));
         } else if (viewType.equalsIgnoreCase("createNote")){
             subjectID = Integer.parseInt(getIntent().getStringExtra("SubjectID"));
             maxNoteID = getMaxID();
             Log.v("Max Note ID: ", String.valueOf(maxNoteID));
         }
     }
-
-
-//    public void takePicture(){
-//        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        startActivityForResult(intent,CAPTURE_COOLER_PHOTO);
-//    }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if(resultCode == RESULT_OK){
-//            switch (requestCode) {
-//                case CAPTURE_COOLER_PHOTO:
-//                    Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-////                    int imageWidth = 100;
-////                    int imageHeight = 80;
-////                    saveImageToGallary(bitmap);
-////                    imageButton.setImageBitmap(bitmap);
-//                    break;
-//            }
-//        }
-//    }
-
-//
-//    private void saveImageToGallary(Bitmap bitmap){
-//        String root = Environment.getExternalStorageDirectory().toString();
-//        File myDir = new File(root + "/saveImages");
-//        myDir.mkdirs();
-//        Random generator = new Random();
-//        int n = 1000;
-//        n = generator.nextInt(n);
-//        String imageName = "Image-" + n + ".jpg";
-//        File file = new File(myDir,imageName);
-//        if(file.exists()) file.delete();
-//        try{
-//
-//            FileOutputStream outputStream = new FileOutputStream(file);
-//            bitmap.compress(Bitmap.CompressFormat.JPEG,90,outputStream);
-//            String esizeImagePath = file.getAbsolutePath();
-//            outputStream.flush();
-//            outputStream.close();
-////            saveToSharedPreferences("coolerImagePath",resizeImagePath,NoteActivity.this);
-////            saveToSharedPreferences("coolerImageName",coolName,ImagesAndLast.this);
-////            txvCoolerPicPath.setText(imageName);
-//            Toast.makeText(NoteActivity.this,"Photo resized and saved",Toast.LENGTH_LONG).show();
-//
-//
-//        }catch (Exception e){
-//            e.printStackTrace();
-//            Toast.makeText(NoteActivity.this,"Exception thrown",Toast.LENGTH_LONG).show();
-//        }
-//
-////        String uriAfterResize = resizeImagePath;
-////        if(uriAfterResize != null  &&  uriAfterResize.isEmpty()){
-////            new uploadPictureToServer(uriAfterResize).execute(Uri.parse(uriAfterResize));
-////
-////        }
-//    }
 
     private int getMaxID(){
         int mx = -1;
@@ -184,11 +129,17 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.save: {
-                Note note = new Note();
-                note.id = maxNoteID;
-                note.title = String.valueOf(note_title.getText());
-                note.content = String.valueOf(note_content.getText());
-                saveNote(note);
+                if (selectedNote == null){
+                    selectedNote = new Note();
+                }
+                if(viewType.equalsIgnoreCase("displayNote")){
+                    selectedNote.id = displayNoteID;
+                } else {
+                    selectedNote.id = maxNoteID;
+                }
+                selectedNote.title = String.valueOf(note_title.getText());
+                selectedNote.content = String.valueOf(note_content.getText());
+                saveNote(selectedNote);
 //                Intent homeActivity = new Intent(this, HomeActivity.class);
 //                startActivity(homeActivity);
             } break;
@@ -199,7 +150,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     public Note getNoteFromDatabaseForID(int noteID){
         try{
             sqLiteDatabase = dbHelper.getReadableDatabase();
-            String columns[] = {"ID", "CONTENT", "TITLE"};
+            String columns[] = {"ID", "CONTENT", "TITLE", "IMAGE"};
             String userData[] = {String.valueOf(noteID)};
             Note note = new Note();
             Cursor cursor = sqLiteDatabase.query("NOTES", columns, "ID = ?", userData, null, null, null);
@@ -207,6 +158,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
                 note.id = noteID;
                 note.title = cursor.getString(cursor.getColumnIndex("TITLE"));
                 note.content = cursor.getString(cursor.getColumnIndex("CONTENT"));
+                note.image = cursor.getString(cursor.getColumnIndex("IMAGE"));
             }
             return note;
         }catch(Exception e){
@@ -216,7 +168,6 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             sqLiteDatabase.close();
         }
     }
-
 
     public  String dateTimeFormat(){
         Calendar cal = Calendar.getInstance();
@@ -238,7 +189,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             cv.put("CREATIONDATE", dateTimeFormat());
             cv.put("LATITUDE", note.latitude);
             cv.put("LONGITUDE", note.longitude);
-
+            Log.v("SaveImageName",note.image);
             sqLiteDatabase = dbHelper.getWritableDatabase();
             if(viewType.equalsIgnoreCase("displayNote")){
                 String userData[] = {String.valueOf(displayNoteID)};
@@ -253,12 +204,17 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             Log.e("Note Creation", e.getMessage());
         }finally {
             sqLiteDatabase.close();
+            finish();
+//            Intent homeActivity = new Intent(this, HomeActivity.class);
+//            startActivity(homeActivity);
         }
     }
 
-
     @Override
     public void onClick(View view) {
+        if (selectedNote == null){
+            selectedNote = new Note();
+        }
         switch (view.getId()){
             case R.id.mapButton:{
                 //Map Stuff
@@ -291,80 +247,55 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-    //Gallery and Camera related methods
-    private void setPic() {
-        // Get the dimensions of the View
-        int targetW = imageView.getWidth();
-        int targetH = imageView.getHeight();
-
-        // Get the dimensions of the bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW/targetW, photoH/targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
-        Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-        imageView.setImageBitmap(bitmap);
-    }
-
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        "com.example.android.fileprovider",
-                        photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        }
-    }
-
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(imageFileName,".jpg", storageDir);
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
-
-    private void galleryAddPic() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(mCurrentPhotoPath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        this.sendBroadcast(mediaScanIntent);
+        startActivityForResult(takePictureIntent, CAPTURE_COOLER_PHOTO);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            imageView.setImageBitmap(imageBitmap);
+        if(resultCode != RESULT_CANCELED){
+            if (requestCode == CAPTURE_COOLER_PHOTO) {
+                Bitmap bitmap = (Bitmap) data.getExtras().get("data");
+                saveImageToGallary(bitmap);
+                imageView.setImageBitmap(bitmap);
+            }
         }
     }
 
+    private void saveImageToGallary(Bitmap bitmap){
+        Log.v("Root: ", ROOT_DIR);
+        File myDir = new File(ROOT_DIR);
+        myDir.mkdirs();
+        long imageID = 0;
+        if (viewType.equalsIgnoreCase("displayNote")){
+            imageID = selectedNote.id;
+        } else {
+            imageID = maxNoteID;
+        }
+        String imageName = "Image-" + imageID + ".jpg";
+        File file = new File(myDir,imageName);
+        if(file.exists()) file.delete();
+        try{
+            FileOutputStream outputStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG,90,outputStream);
+            String resizeImagePath = file.getAbsolutePath();
+            Log.v("ImagePath", resizeImagePath);
+            Log.v("ImageName", imageName);
+            outputStream.flush();
+            outputStream.close();
+            Toast.makeText(NoteActivity.this,"Photo resized and saved",Toast.LENGTH_LONG).show();
+            selectedNote.image = imageName;
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(NoteActivity.this,"Exception thrown",Toast.LENGTH_LONG).show();
+        }
+    }
+
+    public Bitmap getBitmapImage(String imageName){
+        Bitmap bmp = BitmapFactory.decodeFile(ROOT_DIR + "/" + imageName);
+        Log.v("ReadingImagePath", ROOT_DIR + "/" + imageName);
+        Log.v("ReadingImageName", imageName);
+        return bmp;
+    }
 }
