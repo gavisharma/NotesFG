@@ -278,7 +278,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
         if(file.exists()) file.delete();
         try{
             FileOutputStream outputStream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG,90,outputStream);
+            bitmap.compress(Bitmap.CompressFormat.JPEG,100,outputStream);
             String resizeImagePath = file.getAbsolutePath();
             Log.v("ImagePath", resizeImagePath);
             Log.v("ImageName", imageName);

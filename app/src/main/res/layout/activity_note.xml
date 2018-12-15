@@ -11,13 +11,16 @@
         android:id="@+id/note_content"
         android:layout_width="0dp"
         android:layout_height="200dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
-        android:text="AutoCompleteTextView"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:gravity="top"
+        android:hint="Content"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/note_title" />
 
@@ -25,20 +28,21 @@
         android:id="@+id/note_title"
         android:layout_width="0dp"
         android:layout_height="40dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:ems="10"
+        android:hint="Title"
         android:inputType="textPersonName"
-        android:text="Name"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/audioButton"
+        android:background="@drawable/buttons"
         android:layout_width="0dp"
         android:layout_height="50dp"
         android:text="@string/audioButton"
@@ -47,6 +51,7 @@
 
     <Button
         android:id="@+id/mapButton"
+        android:background="@drawable/buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/mapButton"
@@ -55,6 +60,7 @@
 
     <Button
         android:id="@+id/imageButton"
+        android:background="@drawable/buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/imageButton"
@@ -65,13 +71,15 @@
 
     <ImageView
         android:id="@+id/capturedImage"
-        android:layout_width="0dp"
+        android:layout_width="200dp"
         android:layout_height="0dp"
+        android:background="@drawable/radius"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toTopOf="@+id/imageButton"
+        app:layout_constraintBottom_toTopOf="@+id/audioButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/note_content"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/common_google_signin_btn_icon_light_normal" />
 
 </android.support.constraint.ConstraintLayout>
