@@ -104,7 +104,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         dbHelper = new DBHelper(this);
         sqLiteDatabase = dbHelper.getWritableDatabase();
-//        sqLiteDatabase.beginTransaction();
         sqLiteDatabase.close();
     }
 
