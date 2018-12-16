@@ -11,6 +11,8 @@
         android:layout_width="268dp"
         android:layout_height="58dp"
         android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/subjectSelection"
         android:textColor="@android:color/holo_blue_dark" />
 
 </LinearLayout>

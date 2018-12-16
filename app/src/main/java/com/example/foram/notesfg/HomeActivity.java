@@ -1,11 +1,14 @@
 package com.example.foram.notesfg;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
+import android.view.MenuInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,6 +21,7 @@ import android.view.MenuItem;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -28,7 +32,46 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     SQLiteDatabase sqLiteDatabase;
     GridView notesGrid;
     String viewNote;
+
+    private static int SORT_NORMAL  = 0;
+    private static int SORT_DATE    = 1;
+    private static int SORT_TITLE   = 2;
+    private static int SORT_SUBJECT = 3;
+
     ArrayList<Note> noteArray = new ArrayList<>();
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        noteArray.clear();
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            Log.v("Query String",""+query);
+            try {
+                dbHelper = new DBHelper((this));
+                sqLiteDatabase = dbHelper.getReadableDatabase();
+                Cursor cursor = sqLiteDatabase.rawQuery("SELECT ID, CONTENT, CREATIONDATE, TITLE, LATITUDE, LONGITUDE, IMAGE, SUB_ID FROM NOTES where CONTENT like '%" + query + "%' OR TITLE like '%" + query + "%'", null);
+                while (cursor.moveToNext()){
+                    Note notes = new Note();
+                    notes.id = cursor.getInt(cursor.getColumnIndex("ID"));
+                    notes.setTitle(cursor.getString(cursor.getColumnIndex("TITLE")));
+                    notes.setContent(cursor.getString(cursor.getColumnIndex("CONTENT")));
+                    notes.setDateTime(cursor.getString(cursor.getColumnIndex("CREATIONDATE")));
+                    notes.setImage(cursor.getString(cursor.getColumnIndex("IMAGE")));
+                    notes.setSubID(cursor.getLong(cursor.getColumnIndex("SUB_ID")));
+                    noteArray.add(notes);
+                }
+            } catch(Exception e){
+                Log.e("HomeActivity",e.getMessage());
+            } finally {
+                sqLiteDatabase.close();
+                notesDisplayGrid(noteArray, viewNote);
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +79,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
         notesGrid = findViewById(R.id.notesGrid);
         notesGrid.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE_MODAL);
         viewNote = "select";
@@ -68,16 +112,23 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     public void onStart(){
         super.onStart();
         noteArray.clear();
-        noteArray = getNotes();
+        noteArray = getNotes(SORT_NORMAL);
         notesDisplayGrid(noteArray,viewNote);
     }
 
-    public ArrayList<Note> getNotes() {
+    public ArrayList<Note> getNotes(int searchPattern) {
         dbHelper = new DBHelper((this));
         try{
             sqLiteDatabase = dbHelper.getReadableDatabase();
             String noteColumns[] = {"ID", "CONTENT", "CREATIONDATE", "TITLE", "LATITUDE", "LONGITUDE", "IMAGE", "SUB_ID"};
-            Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,"TITLE ASC");
+            Cursor cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,null);
+            if (searchPattern == SORT_TITLE) {
+                cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,"TITLE ASC");
+            } else if (searchPattern == SORT_SUBJECT){
+                cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,"SUB_ID ASC");
+            } else if (searchPattern == SORT_DATE){
+                cursor = sqLiteDatabase.query("NOTES", noteColumns,null,null,null,null,"CREATIONDATE ASC");
+            }
             while (cursor.moveToNext()){
                 Note notes = new Note();
                 notes.id = cursor.getInt(cursor.getColumnIndex("ID"));
@@ -85,6 +136,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 notes.setContent(cursor.getString(cursor.getColumnIndex("CONTENT")));
                 notes.setDateTime(cursor.getString(cursor.getColumnIndex("CREATIONDATE")));
                 notes.setImage(cursor.getString(cursor.getColumnIndex("IMAGE")));
+                notes.setSubID(cursor.getLong(cursor.getColumnIndex("SUB_ID")));
                 noteArray.add(notes);
             }
         }catch(Exception e){
@@ -125,7 +177,22 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.home, menu);
+//        getMenuInflater().inflate(R.menu.home, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                noteArray.clear();
+                getNotes(SORT_NORMAL);
+                notesDisplayGrid(noteArray, viewNote);
+                return true;
+            }
+        });
         return true;
     }
 
@@ -151,11 +218,17 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.sort_by_subject) {
-
+            noteArray.clear();
+            getNotes(SORT_SUBJECT);
+            notesDisplayGrid(noteArray, viewNote);
         } else if (id == R.id.sort_by_date) {
-
+            noteArray.clear();
+            getNotes(SORT_DATE);
+            notesDisplayGrid(noteArray, viewNote);
         } else if (id == R.id.sort_by_title) {
-
+            noteArray.clear();
+            getNotes(SORT_TITLE);
+            notesDisplayGrid(noteArray, viewNote);
         } else if (id == R.id.add_subject) {
 
         } else if (id == R.id.remove_subject) {
