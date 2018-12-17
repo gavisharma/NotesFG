@@ -3,6 +3,7 @@ package com.example.foram.notesfg;
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -20,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -228,7 +230,43 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.imageButton:{
                 //Image Stuff
                 //Setting permission to access camera and gallary
-                getCameraPermission();
+//                getCameraPermission();
+                String title = "Open Photo";
+                CharSequence[] itemlist ={"Take a Photo",
+                        "Pick from Gallery",
+                        "Open from File"};
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                builder.setIcon(R.drawable.icon_app);
+                builder.setTitle("Select an option");
+                builder.setItems(itemlist, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:// Take Photo
+                                // Do Take Photo task here
+                                getCameraPermission();
+                                break;
+                            case 1: {// Choose Existing Photo
+                                // Do Pick Photo task here
+                                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                intent.setType("image/*");
+                                intent.setAction(Intent.ACTION_GET_CONTENT);
+                                startActivityForResult(Intent.createChooser(intent,"Select Picture"), 2);
+                            }
+                                break;
+                            case 2:// Choose Existing File
+                                // Do Pick file here
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.setCancelable(true);
+                alert.show();
             } break;
             default:{
                 //Do nothing
@@ -260,6 +298,16 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
                 Bitmap bitmap = (Bitmap) data.getExtras().get("data");
                 saveImageToGallary(bitmap);
                 imageView.setImageBitmap(bitmap);
+            }
+            if (requestCode == 2 && resultCode == RESULT_OK && null != data) {
+                Uri selectedImage = data.getData();
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+                    saveImageToGallary(bitmap);
+                    imageView.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    Log.i("TAG", "Some exception " + e);
+                }
             }
         }
     }
