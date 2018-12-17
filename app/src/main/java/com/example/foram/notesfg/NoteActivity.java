@@ -14,6 +14,7 @@ import android.graphics.Canvas;
 import android.media.AudioManager;
 import android.media.Image;
 import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -51,14 +52,15 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
+import java.util.UUID;
 
 import static com.example.foram.notesfg.DBHelper.NOTE;
 
 public class NoteActivity extends AppCompatActivity implements View.OnClickListener {
 
-    EditText note_title;
+    EditText note_title, audioLabel;
     TextView note_content;
-    Button imageButton, audioButton, mapButton;
+    Button imageButton, audioButton, mapButton, playButton, stopButton;
     ImageView imageView;
 
     DBHelper dbHelper;
@@ -66,35 +68,46 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     int subjectID, maxNoteID, displayNoteID;
     String viewType;
     Note selectedNote;
-    Boolean imageSelected;
+    Boolean imageSelected, isRecording;
     private static String ROOT_DIR = Environment.getExternalStorageDirectory().toString() + "/saveImages";
+    private static String AUDI_DIR = Environment.getExternalStorageDirectory().toString() + "/saveRecording";
+
     public static final int REQUEST_PERM_WRITE_STORAGE = 102;
     private final int CAPTURE_COOLER_PHOTO = 104;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
 
+    final int REQUEST_PERM_CODE = 1000;
+
     Bitmap resizeImage;
 
     String mCurrentPhotoPath;
 
-    MediaPlayer player;
+    MediaRecorder mediaRecorder;
+    MediaPlayer mediaPlayer;
+    private String audio_path = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_note);
-
+        isRecording = false;
         mapButton    = findViewById(R.id.mapButton);
         imageView    = findViewById(R.id.capturedImage);
         note_title   = findViewById(R.id.note_title);
         imageButton  = findViewById(R.id.imageButton);
         audioButton  = findViewById(R.id.audioButton);
         note_content = findViewById(R.id.note_content);
+        playButton = findViewById(R.id.play);
+        stopButton = findViewById(R.id.stop);
+        audioLabel = findViewById(R.id.audioLabel);
+        playButton.setOnClickListener(this);
+        stopButton.setOnClickListener(this);
         imageButton.setOnClickListener(this);
         audioButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
+        playButton.setText("Record");
 
-        player = new MediaPlayer();
         dbHelper = new DBHelper(this);
 
         viewType = getIntent().getStringExtra("ViewType");
@@ -220,6 +233,20 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    private boolean checkPermissionFromDevice() {
+
+        int write_external_storage_result = ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int record_audio_storage = ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO);
+        return write_external_storage_result == PackageManager.PERMISSION_GRANTED && record_audio_storage == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestPermission() {
+        ActivityCompat.requestPermissions(this,new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.RECORD_AUDIO
+        },REQUEST_PERM_CODE);
+    }
+
     @Override
     public void onClick(View view) {
         if (selectedNote == null){
@@ -247,11 +274,28 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
-                            case 0:// Record Audio
+                            case 0: {// Record Audio
                                 //Do the recording stuff here
-                                break;
-                            case 1: {// Choose Existing Photo
-                                // Do Pick Photo task here
+                                if(checkPermissionFromDevice()) {
+                                    isRecording = true;
+                                    long audioID = 0;
+                                    if (viewType.equalsIgnoreCase("displayNote")) {
+                                        audioID = selectedNote.id;
+                                    } else {
+                                        audioID = maxNoteID;
+                                    }
+                                    String audioName = "Audio-" + audioID + ".3gp";
+                                    audio_path = AUDI_DIR + "/" +audioName;
+                                    playButton.setText("Record");
+                                    setUpMediaRecorder(audio_path);
+                                } else {
+                                    requestPermission();
+
+                                }
+                            } break;
+                            case 1: {// Choose Existing Audio
+                                // Do Pick Audio task here
+                                isRecording = false;
                                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                                 intent.setType("audio/*"); // specify "audio/mp3" to filter only mp3 files
                                 startActivityForResult(Intent.createChooser(intent,"Select Audio"), 2);
@@ -312,6 +356,41 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
                 alert.setCancelable(true);
                 alert.show();
             } break;
+            case R.id.play:{
+                if (isRecording){
+                    try {
+                        mediaRecorder.prepare();
+                        mediaRecorder.start();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    Toast.makeText(NoteActivity.this, "Recording...", Toast.LENGTH_SHORT).show();
+                } else {
+                    mediaPlayer = new MediaPlayer();
+                    try{
+                        mediaPlayer.setDataSource(audio_path);
+                        mediaPlayer.prepare();
+                    } catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    mediaPlayer.start();
+                    Toast.makeText(NoteActivity.this,"PLaying...",Toast.LENGTH_SHORT).show();
+                }
+            } break;
+            case R.id.stop:{
+                if (isRecording){
+                    mediaRecorder.stop();
+                    playButton.setText("Play");
+                    isRecording = false;
+                    saveAudioToGallary();
+                } else {
+                    if(mediaPlayer != null){
+                        mediaPlayer.stop();
+                        mediaPlayer.release();
+                        setUpMediaRecorder(audio_path);
+                    }
+                }
+            } break;
             default:{
                 //Do nothing
             }
@@ -335,6 +414,14 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(takePictureIntent, CAPTURE_COOLER_PHOTO);
     }
 
+    private void setUpMediaRecorder(String filePath) {
+        mediaRecorder = new MediaRecorder();
+        mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mediaRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+        mediaRecorder.setOutputFile(filePath);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(resultCode != RESULT_CANCELED){
@@ -356,23 +443,52 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             if(requestCode == 1 && resultCode == RESULT_OK && !imageSelected){
                 Uri audio = data.getData(); //declared above Uri audio;
                 Log.d("media", "onActivityResult: "+audio);
-                player = new MediaPlayer();
-                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                mediaPlayer = new MediaPlayer();
+                mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 try {
-                    player.setDataSource(new FileInputStream(new File(audio.getPath())).getFD());
+                    mediaPlayer.setDataSource(new FileInputStream(new File(audio.getPath())).getFD());
                 } catch (IOException e) {
                     Log.v("Audio Exception", e.getLocalizedMessage());
                 }
 
-                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                     @Override
                     public void onPrepared(MediaPlayer mediaPlayer) {
-                        player.start();
+                        mediaPlayer.start();
                     }
                 });
 
-                player.prepareAsync();
+                mediaPlayer.prepareAsync();
             }
+        }
+    }
+
+    private void saveAudioToGallary(){
+        Log.v("Root: ", AUDI_DIR);
+        File myDir = new File(AUDI_DIR);
+        myDir.mkdirs();
+        long audioID = 0;
+        if (viewType.equalsIgnoreCase("displayNote")){
+            audioID = selectedNote.id;
+        } else {
+            audioID = maxNoteID;
+        }
+        String audioName = "Audio-" + audioID + ".3gp";
+        audioLabel.setText(audioName);
+        File file = new File(myDir, audioName);
+        if(file.exists()) file.delete();
+        try{
+            FileOutputStream outputStream = new FileOutputStream(file);
+            String resizeImagePath = file.getAbsolutePath();
+            Log.v("ImagePath", resizeImagePath);
+            Log.v("ImageName", audioName);
+            outputStream.flush();
+            outputStream.close();
+            Toast.makeText(NoteActivity.this,"Audio saved",Toast.LENGTH_LONG).show();
+            selectedNote.image = audioName;
+        }catch (Exception e){
+            e.printStackTrace();
+            Toast.makeText(NoteActivity.this,"Exception thrown",Toast.LENGTH_LONG).show();
         }
     }
 
