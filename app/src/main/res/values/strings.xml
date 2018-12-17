@@ -9,7 +9,7 @@
     <string name="action_settings">Settings</string>
     <string name="subjectText">Proceed</string>
     <string name="subjectSelection">Select Subject</string>
-    <string name="audioButton">Add Audio</string>
-    <string name="imageButton">Add Image</string>
-    <string name="mapButton">Add Location</string>
+    <string name="audioButton">+ Audio</string>
+    <string name="imageButton">+ Image</string>
+    <string name="mapButton">+ Location</string>
 </resources>

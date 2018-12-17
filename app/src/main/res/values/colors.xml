@@ -4,6 +4,6 @@
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
     <color name="sky">#52a8b8</color>
-    <color name="light_Green">#52a8b8</color>
-    <color name="lgt_Green">#3c7c5c</color>
+    <color name="light_Green">#008B8B</color>
+    <color name="white">#FFFFFF</color>
 </resources>
