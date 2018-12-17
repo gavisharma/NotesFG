@@ -6,4 +6,5 @@
     <color name="sky">#52a8b8</color>
     <color name="light_Green">#008B8B</color>
     <color name="white">#FFFFFF</color>
+    <color name="noteheader">#00BFFF</color>
 </resources>
