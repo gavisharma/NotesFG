@@ -11,7 +11,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.media.AudioManager;
 import android.media.Image;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -37,6 +39,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -63,6 +66,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     int subjectID, maxNoteID, displayNoteID;
     String viewType;
     Note selectedNote;
+    Boolean imageSelected;
     private static String ROOT_DIR = Environment.getExternalStorageDirectory().toString() + "/saveImages";
     public static final int REQUEST_PERM_WRITE_STORAGE = 102;
     private final int CAPTURE_COOLER_PHOTO = 104;
@@ -72,6 +76,8 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     Bitmap resizeImage;
 
     String mCurrentPhotoPath;
+
+    MediaPlayer player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +94,7 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
         audioButton.setOnClickListener(this);
         mapButton.setOnClickListener(this);
 
+        player = new MediaPlayer();
         dbHelper = new DBHelper(this);
 
         viewType = getIntent().getStringExtra("ViewType");
@@ -226,11 +233,48 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
             } break;
             case R.id.audioButton:{
                 //Audio Stuff
+                imageSelected = false;
+                String title = "Open Audio";
+                CharSequence[] itemlist ={"Record an audio",
+                        "Pick from Storage",
+                        "Open from File"};
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                builder.setIcon(R.drawable.icon_app);
+                builder.setTitle("Select an option");
+                builder.setItems(itemlist, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:// Record Audio
+                                //Do the recording stuff here
+                                break;
+                            case 1: {// Choose Existing Photo
+                                // Do Pick Photo task here
+                                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                                intent.setType("audio/*"); // specify "audio/mp3" to filter only mp3 files
+                                startActivityForResult(Intent.createChooser(intent,"Select Audio"), 2);
+                            }
+                            break;
+                            case 2:// Choose Existing File
+                                // Do Pick file here
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+                AlertDialog alert = builder.create();
+                alert.setCancelable(true);
+                alert.show();
+
             } break;
             case R.id.imageButton:{
                 //Image Stuff
                 //Setting permission to access camera and gallary
 //                getCameraPermission();
+                imageSelected = true;
                 String title = "Open Photo";
                 CharSequence[] itemlist ={"Take a Photo",
                         "Pick from Gallery",
@@ -294,12 +338,12 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(resultCode != RESULT_CANCELED){
-            if (requestCode == CAPTURE_COOLER_PHOTO) {
+            if (requestCode == CAPTURE_COOLER_PHOTO && imageSelected) {
                 Bitmap bitmap = (Bitmap) data.getExtras().get("data");
                 saveImageToGallary(bitmap);
                 imageView.setImageBitmap(bitmap);
             }
-            if (requestCode == 2 && resultCode == RESULT_OK && null != data) {
+            if (requestCode == 2 && resultCode == RESULT_OK && data != null && imageSelected) {
                 Uri selectedImage = data.getData();
                 try {
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
@@ -308,6 +352,26 @@ public class NoteActivity extends AppCompatActivity implements View.OnClickListe
                 } catch (IOException e) {
                     Log.i("TAG", "Some exception " + e);
                 }
+            }
+            if(requestCode == 1 && resultCode == RESULT_OK && !imageSelected){
+                Uri audio = data.getData(); //declared above Uri audio;
+                Log.d("media", "onActivityResult: "+audio);
+                player = new MediaPlayer();
+                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                try {
+                    player.setDataSource(new FileInputStream(new File(audio.getPath())).getFD());
+                } catch (IOException e) {
+                    Log.v("Audio Exception", e.getLocalizedMessage());
+                }
+
+                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        player.start();
+                    }
+                });
+
+                player.prepareAsync();
             }
         }
     }
